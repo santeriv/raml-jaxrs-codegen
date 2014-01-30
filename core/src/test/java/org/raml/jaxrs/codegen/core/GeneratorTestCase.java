@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.raml.jaxrs.codegen.core.Configuration.JaxrsVersion.JAXRS_1_1;
 import static org.raml.jaxrs.codegen.core.Configuration.JaxrsVersion.JAXRS_2_0;
 
@@ -127,22 +128,7 @@ public class GeneratorTestCase
             new InputStreamReader(getClass().getResourceAsStream("/org/raml/schema/valid-xml.yaml")),
             configuration));
 
-        // test compile the classes
-        final JavaCompiler compiler = new JavaCompilerFactory().createCompiler("eclipse");
-
-        final JavaCompilerSettings settings = compiler.createDefaultSettings();
-        settings.setSourceVersion("1.5");
-        settings.setTargetVersion("1.5");
-        settings.setDebug(true);
-
-        final String[] sources = generatedSources.toArray(EMPTY_STRING_ARRAY);
-        System.out.println("Test compiling: " + Arrays.toString(sources));
-
-        final FileResourceReader sourceReader = new FileResourceReader(codegenOutputFolder.getRoot());
-        final FileResourceStore classWriter = new FileResourceStore(compilationOutputFolder.getRoot());
-        final CompilationResult result = compiler.compile(sources, sourceReader, classWriter,
-            Thread.currentThread().getContextClassLoader(), settings);
-
+        final CompilationResult result = compile(generatedSources);
         assertThat(ToStringBuilder.reflectionToString(result.getErrors(), ToStringStyle.SHORT_PREFIX_STYLE),
             result.getErrors(), is(emptyArray()));
 
@@ -170,4 +156,66 @@ public class GeneratorTestCase
             Thread.currentThread().setContextClassLoader(initialClassLoader);
         }
     }
+
+	private CompilationResult compile(final Set<String> generatedSources) {
+		// test compile the classes
+        final JavaCompiler compiler = new JavaCompilerFactory().createCompiler("eclipse");
+
+        final JavaCompilerSettings settings = compiler.createDefaultSettings();
+        settings.setSourceVersion("1.5");
+        settings.setTargetVersion("1.5");
+        settings.setDebug(true);
+
+        final String[] sources = generatedSources.toArray(EMPTY_STRING_ARRAY);
+        System.out.println("Test compiling: " + Arrays.toString(sources));
+
+        final FileResourceReader sourceReader = new FileResourceReader(codegenOutputFolder.getRoot());
+        final FileResourceStore classWriter = new FileResourceStore(compilationOutputFolder.getRoot());
+        final CompilationResult result = compiler.compile(sources, sourceReader, classWriter,
+            Thread.currentThread().getContextClassLoader(), settings);
+		return result;
+	}
+    
+    @Test
+    public void testGenereratorWithRamlHavingSomeSchemaRefs() throws Exception {
+    	final Set<String> generatedSources = new HashSet<String>();
+    	final Configuration configuration = new Configuration();
+    	configuration.setJaxrsVersion(JAXRS_1_1);
+    	configuration.setUseJsr303Annotations(true);
+    	configuration.setOutputDirectory(codegenOutputFolder.getRoot());
+
+    	configuration.setBasePackageName(TEST_BASE_PACKAGE);
+    	generatedSources.addAll(new Generator().run(
+    			new InputStreamReader(getClass().getResourceAsStream("/org/raml/integration/raml_with_schemas.raml")),
+    			configuration));
+
+    	final CompilationResult result = compile(generatedSources);
+        assertThat(ToStringBuilder.reflectionToString(result.getErrors(), ToStringStyle.SHORT_PREFIX_STYLE),
+                result.getErrors(), is(emptyArray()));
+
+        assertThat(
+            ToStringBuilder.reflectionToString(result.getWarnings(), ToStringStyle.SHORT_PREFIX_STYLE),
+            result.getWarnings(), is(emptyArray()));
+        
+        final URLClassLoader resourceClassLoader = new URLClassLoader(
+                new URL[]{compilationOutputFolder.getRoot().toURI().toURL()});
+        try {
+            Class<?> organizationClass  = Class.forName("org.raml.jaxrs.test.model.Organization", true, resourceClassLoader);
+            System.out.println("Organization pojo fields: " + Arrays.toString(organizationClass.getDeclaredFields()));
+            Class<?> officesClass  = Class.forName("org.raml.jaxrs.test.model.Offices", true, resourceClassLoader);
+            System.out.println("Offices pojo fields: " + Arrays.toString(officesClass.getDeclaredFields()));
+            Class<?> personsClass  = Class.forName("org.raml.jaxrs.test.model.Persons", true, resourceClassLoader);
+            System.out.println("Persons pojo fields: " + Arrays.toString(personsClass.getDeclaredFields()));
+            Class<?> personClass  = Class.forName("org.raml.jaxrs.test.model.Person", true, resourceClassLoader);
+            System.out.println("Person pojo fields: " + Arrays.toString(personClass.getDeclaredFields()));
+            Class<?> officeClass  = Class.forName("org.raml.jaxrs.test.model.Office", true, resourceClassLoader);
+            System.out.println("Office pojo fields: " + Arrays.toString(officeClass.getDeclaredFields()));
+        }
+        catch(Exception e) {
+        	e.printStackTrace();
+        	fail("Class.forName should not throw exceptions,");
+        }
+    }
+    
+    
 }

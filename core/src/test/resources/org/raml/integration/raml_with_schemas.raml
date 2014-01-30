@@ -1,0 +1,153 @@
+#%RAML 0.8
+title: A RAML WITH SOME SCHEMAS API
+version: v0.1
+baseUri: http://{domain}:{port}/{path}/{version}
+mediaType:  application/json
+protocols: [ HTTP ]
+baseUriParameters:
+  domain:
+    type: string
+    displayName: domain
+    default: localhost
+    example: localhost
+  port:
+    type: integer
+    displayName: port
+    minimum: 1
+    maximum: 65535
+    default: 8080
+    example: 8080
+  path:
+    type: string
+    displayName: context
+    default: prof1t
+    example: prof1t
+documentation:
+ - title: Home
+   content: |
+     Welcome to the _REST API_ Documentation. 
+     [a link](http://www.profitsoftware.com/).
+schemas:
+  - person: | 
+      {  "$schema": "http://json-schema.org/draft-03/schema",
+         "type": "object",
+         "description": "Person",
+         "properties": {
+              "id": {
+                  "type": "string",
+                  "description": "Person id"
+              },
+              "name": {
+                  "type": "string",
+                  "description": "Person name"
+              }
+         },
+         "additionalProperties": false 
+      }
+    persons: |
+      {  "$schema": "http://json-schema.org/draft-03/schema",
+         "description": "An array of Persons",
+         "type": "object",
+         "items" : { "$ref": "person" },
+         "additionalProperties": false 
+      }   
+    office: |
+      {  "$schema": "http://json-schema.org/draft-03/schema",
+         "type": "object",
+         "description": "Office",
+         "properties": {
+            "persons": { "$ref": "persons" },
+            "id": {
+                "type": "string",
+                "description": "Office id"
+            },
+            "name": {
+                "type": "string",
+                "description": "Office name"
+            }
+         },
+         "additionalProperties": false 
+      }
+    offices: |
+      {  "$schema": "http://json-schema.org/draft-03/schema",
+         "description": "An array of Offices",
+         "type": "object",
+         "items" : { "$ref": "office" },
+         "additionalProperties": false 
+      }
+    organization: |
+      {  "$schema": "http://json-schema.org/draft-03/schema",
+         "description": "An Entity of Offices",
+         "type": "object",
+         "properties": {
+            "offices": { "$ref": "offices" },
+            "id": {
+                "type": "string",
+                "description": "Organization id"
+            },
+            "name": {
+                "type": "string",
+                "description": "Organization name"
+            }
+         },
+         "additionalProperties": false 
+      }
+/persons:
+  get:
+    description: "Get persons" 
+    responses:
+      200:
+        body:
+          application/json:
+            schema: persons
+/offices:
+  get:
+    description: "Get offices" 
+    responses:
+      200:
+        body:
+          application/json:
+            schema: offices            
+/organization:
+  get:
+    description: "Get organization" 
+    responses:
+      200:
+        body:
+          application/json:
+            schema: organization
+            example: '
+              {
+                  "id": "profitsoftware-1",
+                  "name": "ProfitSoftware Ltd",
+                  "offices": [
+                      {
+                          "id": "office-1",
+                          "name": "Office 1",
+                          "persons": [
+                              {
+                                  "id": "office-1-person-1",
+                                  "name": "Person Himself"
+                              },
+                              {
+                                  "id": "office-1-person-2",
+                                  "name": "Person Herself"
+                              }
+                          ]
+                      },
+                      {
+                          "id": "office-2",
+                          "name": "Office 2",
+                          "persons": [
+                              {
+                                  "id": "office-2-person-1",
+                                  "name": "Another Person"
+                              },
+                              {
+                                  "id": "office-2-person-2",
+                                  "name": "Otherone Person"
+                              }
+                          ]
+                      }
+                  ]
+              }'

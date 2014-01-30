@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import static org.raml.jaxrs.codegen.core.Configuration.JaxrsVersion.JAXRS_1_1;
 import static org.raml.jaxrs.codegen.core.Configuration.JaxrsVersion.JAXRS_2_0;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -88,12 +89,11 @@ public class GeneratorTestCase
     private void run(final JaxrsVersion jaxrsVersion, final boolean useJsr303Annotations) throws Exception
     {
         final Set<String> generatedSources = new HashSet<String>();
-
         final Configuration configuration = new Configuration();
         configuration.setJaxrsVersion(jaxrsVersion);
         configuration.setUseJsr303Annotations(useJsr303Annotations);
         configuration.setOutputDirectory(codegenOutputFolder.getRoot());
-
+        
         configuration.setBasePackageName(TEST_BASE_PACKAGE);
         generatedSources.addAll(new Generator().run(
             new InputStreamReader(getClass().getResourceAsStream("/org/raml/full-config-with-patch.yaml")),
@@ -139,7 +139,7 @@ public class GeneratorTestCase
         // test load the classes with Jersey
         final URLClassLoader resourceClassLoader = new URLClassLoader(
             new URL[]{compilationOutputFolder.getRoot().toURI().toURL()});
-
+    
         final ClassLoader initialClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
@@ -185,6 +185,8 @@ public class GeneratorTestCase
     	configuration.setOutputDirectory(codegenOutputFolder.getRoot());
 
     	configuration.setBasePackageName(TEST_BASE_PACKAGE);
+//    	      File f = codegenOutputFolder.getRoot();
+//    	      configuration.setSchemaDirectory(f);
     	generatedSources.addAll(new Generator().run(
     			new InputStreamReader(getClass().getResourceAsStream("/org/raml/integration/raml_with_schemas.raml")),
     			configuration));

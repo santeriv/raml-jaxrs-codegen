@@ -57,6 +57,7 @@ public class Configuration
     };
 
     private File outputDirectory;
+    private File schemaDirectory;
     private JaxrsVersion jaxrsVersion = JaxrsVersion.JAXRS_1_1;
     private String basePackageName;
     private boolean useJsr303Annotations = false;
@@ -106,6 +107,16 @@ public class Configuration
     public void setOutputDirectory(final File outputDirectory)
     {
         this.outputDirectory = outputDirectory;
+    }
+
+    public File getSchemaDirectory()
+    {
+        return schemaDirectory;
+    }
+
+    public void setSchemaDirectory(final File schemaDirectory)
+    {
+        this.schemaDirectory = schemaDirectory;
     }
 
     public JaxrsVersion getJaxrsVersion()

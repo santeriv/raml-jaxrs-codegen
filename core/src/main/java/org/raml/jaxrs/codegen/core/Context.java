@@ -99,9 +99,16 @@ class Context
         {
             httpMethodAnnotations.put(clazz.getSimpleName(), clazz);
         }
-
-        // write all global schemas to a temporary directory
-        globalSchemaStore = Files.createTempDir();
+        
+        if(configuration.getSchemaDirectory() != null)
+        {
+            globalSchemaStore = configuration.getSchemaDirectory();
+        }
+        else
+        {
+            // write all global schemas to a temporary directory
+            globalSchemaStore = Files.createTempDir();
+        }
         for (final Entry<String, String> nameAndSchema : raml.getConsolidatedSchemas().entrySet())
         {
             final File schemaFile = new File(globalSchemaStore, nameAndSchema.getKey());
